@@ -8,7 +8,7 @@
 
 #import "NonConsumableIAPHelper.h"
 #import <StoreKit/StoreKit.h>
-#import <objc/objc-runtime.h>
+#import <objc/runtime.h>
 
 #define SELF                   [self self]
 #define INDICATOR_MSG          nil

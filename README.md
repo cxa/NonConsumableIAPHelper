@@ -15,4 +15,4 @@ Tried of writing non-consumable In App Purchase again and again? To seek a minim
 
 ## License
 
-NonConsumableIAPHelper is available under the MIT license. In a short word, you can use it into your app royalty-freely, just make sure that you don’t remove above copyright notice.
+NonConsumableIAPHelper is available under the MIT license. In a short word, you can use it into your app royalty-freely, just make sure that you don’t remove the copyright notice.
