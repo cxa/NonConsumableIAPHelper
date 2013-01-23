@@ -1,13 +1,12 @@
 //
-//  NonConsumableIAPHelper.m
-//  NonConsumableIAPHelper
+//  NCIAPHelper.m
+//  NCIAPHelper
 //
 //  Copyright (c) 2013 CHEN Xian'an <xianan.chen@gmail.com>. All rights reserved.
 //
-//  NonConsumableIAPHelper is available under the MIT license. you can use it into your app royalty-freely, just make sure that you don’t remove above copyright notice.
+//  NCIAPHelper is available under the MIT license. you can use it into your app royalty-freely, just make sure that you don’t remove above copyright notice.
 
-#import "NonConsumableIAPHelper.h"
-#import <StoreKit/StoreKit.h>
+#import "NCIAPHelper.h"
 #import <objc/runtime.h>
 
 #define SELF                   [self self]
@@ -15,20 +14,20 @@
 #define TAG_REQUESTING_PRODUCT 'r'
 #define TAG_PURCHASING         'p'
 
-NSString * const kNonConsumableIAPHelperErrorDomain = @"kNonConsumableIAPHelperErrorDomain";
+NSString * const kNCIAPHelperErrorDomain = @"kNCIAPHelperErrorDomain";
 
 static UIAlertView *alertView;
 
-@interface NonConsumableIAPHelper()
+@interface NCIAPHelper()
 
-+ (void (^)(BOOL))completionHandler;
-+ (void)setCompletionHandler:(void (^)(BOOL))completionHandler;
-+ (void (^)(NSError *))errorHandler;
-+ (void)setErrorHandler:(void (^)(NSError *))errorHandler;
++ (NCIAPHelperCompletionHandler)completionHandler;
++ (void)setCompletionHandler:(NCIAPHelperCompletionHandler)completionHandler;
++ (NCIAPHelperErrorHandler)errorHandler;
++ (void)setErrorHandler:(NCIAPHelperErrorHandler)errorHandler;
 
 @end
 
-@implementation NonConsumableIAPHelper
+@implementation NCIAPHelper
 
 + (void)load
 {
@@ -39,8 +38,8 @@ static UIAlertView *alertView;
 }
 
 + (void)purchaseProductWithID:(NSString *)productID
-            completionHandler:(void (^)(BOOL))completionHandler
-                 errorHandler:(void (^)(NSError *error))errorHandler
+            completionHandler:(NCIAPHelperCompletionHandler)completionHandler
+                 errorHandler:(NCIAPHelperErrorHandler)errorHandler
 {
   if (![SKPaymentQueue canMakePayments]){
     [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"In App Purchase Disabled", nil) message:NSLocalizedString(@"Sorry, In App Purchase is disabled on this device. You might need to ask the owner for help or enable it youself in Settings.app.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"Goodbye", nil) otherButtonTitles:nil] show];
@@ -65,10 +64,10 @@ static UIAlertView *alertView;
   SKProduct *p = [response.products lastObject];
   if (!p && [self errorHandler]){
     NSString *invalidID = [response.invalidProductIdentifiers lastObject];
-    NSInteger code = invalidID ? NonConsumableIAPHelperInvalidProductIDError : NonConsumableIAPHelperRequestContainsNoProductError;
+    NSInteger code = invalidID ? NCIAPHelperInvalidProductIDError : NCIAPHelperRequestContainsNoProductError;
     NSString *desc = invalidID ? [NSString stringWithFormat:NSLocalizedString(@"The purchase to the product ID “%@” is invalid.", nil), invalidID] : NSLocalizedString(@"Fail to get product information.", nil);
-    NSError *error = [NSError errorWithDomain:kNonConsumableIAPHelperErrorDomain code:code userInfo:@{NSLocalizedDescriptionKey : desc}];
-    [self errorHandler](error);
+    NSError *error = [NSError errorWithDomain:kNCIAPHelperErrorDomain code:code userInfo:@{NSLocalizedDescriptionKey : desc}];
+    [self errorHandler](nil, error);
     return;
   }
   
@@ -85,16 +84,16 @@ static UIAlertView *alertView;
         t.transactionState == SKPaymentTransactionStateRestored){
       [alertView dismissWithClickedButtonIndex:-1 animated:YES];
       [[SKPaymentQueue defaultQueue] finishTransaction:t];
-      void (^compHandler)(BOOL) = [self completionHandler];
+      NCIAPHelperCompletionHandler compHandler = [self completionHandler];
       if (compHandler)
-        compHandler(t.transactionState == SKPaymentTransactionStateRestored);
+        compHandler(t);
     } else if (t.transactionState == SKPaymentTransactionStateFailed){
       [alertView dismissWithClickedButtonIndex:-1 animated:YES];
       [[SKPaymentQueue defaultQueue] finishTransaction:t];
       if (t.error.code != SKErrorPaymentCancelled){
-        void (^errHandler)(NSError *) = [self errorHandler];
+        NCIAPHelperErrorHandler errHandler = [self errorHandler];
         if (errHandler)
-          errHandler(t.error);
+          errHandler(t, t.error);
       }
     } else if (t.transactionState == SKPaymentTransactionStatePurchasing){
       [alertView dismissWithClickedButtonIndex:-1 animated:YES];
@@ -122,22 +121,22 @@ static UIAlertView *alertView;
 static char kCompletionHandlerKey;
 static char kErrorHandlerKey;
 
-+ (void (^)(BOOL))completionHandler
++ (NCIAPHelperCompletionHandler)completionHandler
 {
   return objc_getAssociatedObject(SELF, &kCompletionHandlerKey);
 }
 
-+ (void)setCompletionHandler:(void (^)(BOOL))completionHandler
++ (void)setCompletionHandler:(NCIAPHelperCompletionHandler)completionHandler
 {
   objc_setAssociatedObject(SELF, &kCompletionHandlerKey, completionHandler, OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
 
-+ (void (^)(NSError *error))errorHandler
++ (NCIAPHelperErrorHandler)errorHandler
 {
   return objc_getAssociatedObject(SELF, &kErrorHandlerKey);
 }
 
-+ (void)setErrorHandler:(void (^)(NSError *error))errorHandler
++ (void)setErrorHandler:(NCIAPHelperErrorHandler)errorHandler
 {
   objc_setAssociatedObject(SELF, &kErrorHandlerKey, errorHandler, OBJC_ASSOCIATION_COPY_NONATOMIC);
 }

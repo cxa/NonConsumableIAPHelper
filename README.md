@@ -1,11 +1,17 @@
-# NonConsumableIAPHelper
+# Non-Consumable In App Purchase Helper
 
-Tried of writing non-consumable In App Purchase again and again? To seek a minimum library that doesn't suck? Here you are.
+Tried of writing redundant codes non-consumable In App Purchase again and again? To seek a minimum library that doesn't suck? Here you are.
 
-`NonConsumableIAPHelper` is a very simple wrapper for non-consumable In App Purchase, only one method to rule them all:
+`NCIAPHelper` is a very simple and minimum wrapper for non-consumable In App Purchase, only one method to rule them all:
 
-	+ (void)purchaseProductWithID:(NSString *)productID completionHandler:(void (^)(BOOL isRestored))completionHandler errorHandler:(void (^)(NSError *error))errorHandler;
+	+ (void)purchaseProductWithID:(NSString *)productID completionHandler:(NCIAPHelperCompletionHandler)completionHandler errorHandler:(NCIAPHelperErrorHandler)errorHandler;
 
+The `typedef` for completion handler and error handler:
+
+    typedef void (^NCIAPHelperCompletionHandler)(SKPaymentTransaction *paymentTransaction);
+    typedef void (^NCIAPHelperErrorHandler)(SKPaymentTransaction *paymentTransaction, NSError *error);
+    
+Notice: the `paymentTransaction` in `NCIAPHelperErrorHandler` may be `nil` if the error is occurred before payment.
 
 ## Creator
 
