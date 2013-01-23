@@ -1,8 +1,8 @@
-# Non-Consumable In App Purchase Helper
+# Non-Consumable In-App Purchase Helper
 
-Tried of writing redundant codes non-consumable In App Purchase again and again? To seek a minimum library that doesn't suck? Here you are.
+Tried of writing redundant codes for non-consumable In-App Purchase again and again? To seek a simple and minimum library that doesn't suck? Here you are.
 
-`NCIAPHelper` is a very simple and minimum wrapper for non-consumable In App Purchase, only one method to rule them all:
+`NCIAPHelper` is a very very lightweight wrapper for non-consumable In-App Purchase, only one method to rule them all:
 
 	+ (void)purchaseProductWithID:(NSString *)productID completionHandler:(NCIAPHelperCompletionHandler)completionHandler errorHandler:(NCIAPHelperErrorHandler)errorHandler;
 
@@ -21,4 +21,4 @@ Notice: the `paymentTransaction` in `NCIAPHelperErrorHandler` may be `nil` if th
 
 ## License
 
-NonConsumableIAPHelper is available under the MIT license. In a short word, you can use it into your app royalty-freely, just make sure that you don’t remove the copyright notice.
+NonConsumableIAPHelper is available under the MIT license. In short, you can use it in your app royalty-freely, just make sure that you don’t remove the copyright notice.
