@@ -9,10 +9,10 @@
 #import "NCIAPHelper.h"
 #import <objc/runtime.h>
 
-#define SELF                   [self self]
-#define INDICATOR_MSG          nil
-#define TAG_REQUESTING_PRODUCT 'r'
-#define TAG_PURCHASING         'p'
+#define SELF                      [self self]
+#define INDICATOR_MSG             nil
+#define TAG_REQUESTING_PRODUCT    'r'
+#define TAG_PREPARING_FOR_PAYMENT 'p'
 
 NSString * const kNCIAPHelperErrorDomain = @"kNCIAPHelperErrorDomain";
 
@@ -68,6 +68,8 @@ static UIAlertView *alertView;
     NSString *desc = invalidID ? [NSString stringWithFormat:NSLocalizedString(@"The purchase to the product ID “%@” is invalid.", nil), invalidID] : NSLocalizedString(@"Fail to get product information.", nil);
     NSError *error = [NSError errorWithDomain:kNCIAPHelperErrorDomain code:code userInfo:@{NSLocalizedDescriptionKey : desc}];
     [self errorHandler](nil, error);
+    [self setCompletionHandler:nil];
+    [self setErrorHandler:nil];
     return;
   }
   
@@ -85,20 +87,24 @@ static UIAlertView *alertView;
       [alertView dismissWithClickedButtonIndex:-1 animated:YES];
       [[SKPaymentQueue defaultQueue] finishTransaction:t];
       NCIAPHelperCompletionHandler compHandler = [self completionHandler];
-      if (compHandler)
+      if (compHandler){
         compHandler(t);
+        [self setCompletionHandler:nil];
+      }
     } else if (t.transactionState == SKPaymentTransactionStateFailed){
       [alertView dismissWithClickedButtonIndex:-1 animated:YES];
       [[SKPaymentQueue defaultQueue] finishTransaction:t];
       if (t.error.code != SKErrorPaymentCancelled){
         NCIAPHelperErrorHandler errHandler = [self errorHandler];
-        if (errHandler)
+        if (errHandler){
           errHandler(t, t.error);
+          [self setErrorHandler:nil];
+        }
       }
     } else if (t.transactionState == SKPaymentTransactionStatePurchasing){
       [alertView dismissWithClickedButtonIndex:-1 animated:YES];
-      alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Accepting Payment...", nil) message:INDICATOR_MSG delegate:self cancelButtonTitle:nil otherButtonTitles:nil];
-      alertView.tag = TAG_PURCHASING;
+      alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Preparing for Payment...", nil) message:INDICATOR_MSG delegate:self cancelButtonTitle:nil otherButtonTitles:nil];
+      alertView.tag = TAG_PREPARING_FOR_PAYMENT;
       [alertView show];
     }
   }
@@ -108,7 +114,7 @@ static UIAlertView *alertView;
 + (void)willPresentAlertView:(UIAlertView *)alertView
 {
   if (alertView.tag == TAG_REQUESTING_PRODUCT ||
-      alertView.tag == TAG_PURCHASING){
+      alertView.tag == TAG_PREPARING_FOR_PAYMENT){
     UIActivityIndicatorView *aiv = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
     aiv.center = CGPointMake(CGRectGetMidX(alertView.bounds), CGRectGetMidY(alertView.bounds) + 10);
     [aiv startAnimating];

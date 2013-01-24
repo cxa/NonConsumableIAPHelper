@@ -21,4 +21,4 @@ Notice: the `paymentTransaction` in `NCIAPHelperErrorHandler` may be `nil` if th
 
 ## License
 
-NonConsumableIAPHelper is available under the MIT license. In short, you can use it in your app royalty-freely, just make sure that you don’t remove the copyright notice.
+`NCIAPHelper` is released under the MIT license. In short, it's royalty-free but you must keep the copyright notice in your code or software distribution.
