@@ -127,7 +127,7 @@ static UIAlertView *alertView;
   [alertView dismissWithClickedButtonIndex:-1 animated:YES];
   NCIAPHelperCompletionHandler compHandler = [self completionHandler];
   if (compHandler)
-    compHandler(queue.transactions[0]);
+    compHandler([queue.transactions count] ? queue.transactions[0] : nil);
   
   [self setCompletionHandler:nil];
   [self setErrorHandler:nil];
@@ -139,7 +139,7 @@ restoreCompletedTransactionsFailedWithError:(NSError *)error
   [alertView dismissWithClickedButtonIndex:-1 animated:YES];
   NCIAPHelperErrorHandler errHandler = [self errorHandler];
   if (errHandler)
-    errHandler(queue.transactions[0], error);
+    errHandler([queue.transactions count] ? queue.transactions[0] : nil, error);
   
   [self setCompletionHandler:nil];
   [self setErrorHandler:nil];
