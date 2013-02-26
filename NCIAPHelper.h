@@ -21,5 +21,6 @@ typedef NS_ENUM(NSInteger, NCIAPHelperErrorCode){
 @interface NCIAPHelper : NSObject
 
 + (void)purchaseProductWithID:(NSString *)productID completionHandler:(NCIAPHelperCompletionHandler)completionHandler errorHandler:(NCIAPHelperErrorHandler)errorHandler;
++ (void)restoreCompletedTransactionsWithcompletionHandler:(NCIAPHelperCompletionHandler)completionHandler errorHandler:(NCIAPHelperErrorHandler)errorHandler;
 
 @end

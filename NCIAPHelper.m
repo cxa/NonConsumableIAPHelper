@@ -13,6 +13,7 @@
 #define INDICATOR_MSG             nil
 #define TAG_REQUESTING_PRODUCT    'r'
 #define TAG_PREPARING_FOR_PAYMENT 'p'
+#define TAG_RESTORING             's'
 
 NSString * const kNCIAPHelperErrorDomain = @"kNCIAPHelperErrorDomain";
 
@@ -48,12 +49,23 @@ static UIAlertView *alertView;
   
   [self setCompletionHandler:completionHandler];
   [self setErrorHandler:errorHandler];
-  alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Connecting to Apple...", nil) message:INDICATOR_MSG delegate:SELF cancelButtonTitle:nil otherButtonTitles:nil];
+  alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Connecting to Apple…", nil) message:INDICATOR_MSG delegate:SELF cancelButtonTitle:nil otherButtonTitles:nil];
   alertView.tag = TAG_REQUESTING_PRODUCT;
   [alertView show];
   SKProductsRequest *request= [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithObject:productID]];
   request.delegate = SELF;
   [request start];
+}
+
++ (void)restoreCompletedTransactionsWithcompletionHandler:(NCIAPHelperCompletionHandler)completionHandler
+                                             errorHandler:(NCIAPHelperErrorHandler)errorHandler
+{
+  alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Restoring…", nil) message:INDICATOR_MSG delegate:SELF cancelButtonTitle:nil otherButtonTitles:nil];
+  alertView.tag = TAG_RESTORING;
+  [alertView show];
+  [[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
+  [self setCompletionHandler:completionHandler];
+  [self setErrorHandler:errorHandler];
 }
 
 #pragma mark - SKProductsRequestDelegate
@@ -103,18 +115,42 @@ static UIAlertView *alertView;
       }
     } else if (t.transactionState == SKPaymentTransactionStatePurchasing){
       [alertView dismissWithClickedButtonIndex:-1 animated:YES];
-      alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Preparing for Payment...", nil) message:INDICATOR_MSG delegate:self cancelButtonTitle:nil otherButtonTitles:nil];
+      alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Preparing for Payment…", nil) message:INDICATOR_MSG delegate:self cancelButtonTitle:nil otherButtonTitles:nil];
       alertView.tag = TAG_PREPARING_FOR_PAYMENT;
       [alertView show];
     }
   }
 }
 
++ (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue
+{
+  [alertView dismissWithClickedButtonIndex:-1 animated:YES];
+  NCIAPHelperCompletionHandler compHandler = [self completionHandler];
+  if (compHandler)
+    compHandler(queue.transactions[0]);
+  
+  [self setCompletionHandler:nil];
+  [self setErrorHandler:nil];
+}
+
++ (void)paymentQueue:(SKPaymentQueue *)queue
+restoreCompletedTransactionsFailedWithError:(NSError *)error
+{
+  [alertView dismissWithClickedButtonIndex:-1 animated:YES];
+  NCIAPHelperErrorHandler errHandler = [self errorHandler];
+  if (errHandler)
+    errHandler(queue.transactions[0], error);
+  
+  [self setCompletionHandler:nil];
+  [self setErrorHandler:nil];
+}
+
 #pragma mark - UIAlertViewDelegate
 + (void)willPresentAlertView:(UIAlertView *)alertView
 {
   if (alertView.tag == TAG_REQUESTING_PRODUCT ||
-      alertView.tag == TAG_PREPARING_FOR_PAYMENT){
+      alertView.tag == TAG_PREPARING_FOR_PAYMENT ||
+      alertView.tag == TAG_RESTORING){
     UIActivityIndicatorView *aiv = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
     aiv.center = CGPointMake(CGRectGetMidX(alertView.bounds), CGRectGetMidY(alertView.bounds) + 10);
     [aiv startAnimating];
