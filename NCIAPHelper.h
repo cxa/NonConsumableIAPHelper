@@ -10,8 +10,8 @@
 #import <StoreKit/StoreKit.h>
 
 extern NSString * const kNCIAPHelperErrorDomain;
-typedef void (^NCIAPHelperCompletionHandler)(SKPaymentTransaction *paymentTransaction);
-typedef void (^NCIAPHelperErrorHandler)(SKPaymentTransaction *paymentTransaction, NSError *error);
+typedef void (^NCIAPHelperCompletionHandler)(NSArray *paymentTransactions);
+typedef void (^NCIAPHelperErrorHandler)(NSArray *paymentTransactions, NSError *error);
 
 typedef NS_ENUM(NSInteger, NCIAPHelperErrorCode){
   NCIAPHelperRequestContainsNoProductError = 0,
@@ -21,6 +21,6 @@ typedef NS_ENUM(NSInteger, NCIAPHelperErrorCode){
 @interface NCIAPHelper : NSObject
 
 + (void)purchaseProductWithID:(NSString *)productID completionHandler:(NCIAPHelperCompletionHandler)completionHandler errorHandler:(NCIAPHelperErrorHandler)errorHandler;
-+ (void)restoreCompletedTransactionsWithcompletionHandler:(NCIAPHelperCompletionHandler)completionHandler errorHandler:(NCIAPHelperErrorHandler)errorHandler;
++ (void)restoreCompletedTransactionsWithCompletionHandler:(NCIAPHelperCompletionHandler)completionHandler errorHandler:(NCIAPHelperErrorHandler)errorHandler;
 
 @end

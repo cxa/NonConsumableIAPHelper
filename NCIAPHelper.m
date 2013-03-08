@@ -57,7 +57,7 @@ static UIAlertView *alertView;
   [request start];
 }
 
-+ (void)restoreCompletedTransactionsWithcompletionHandler:(NCIAPHelperCompletionHandler)completionHandler
++ (void)restoreCompletedTransactionsWithCompletionHandler:(NCIAPHelperCompletionHandler)completionHandler
                                              errorHandler:(NCIAPHelperErrorHandler)errorHandler
 {
   alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Restoring…", nil) message:INDICATOR_MSG delegate:SELF cancelButtonTitle:nil otherButtonTitles:nil];
@@ -93,28 +93,28 @@ static UIAlertView *alertView;
 + (void)paymentQueue:(SKPaymentQueue *)queue
  updatedTransactions:(NSArray *)transactions
 {
+  [alertView dismissWithClickedButtonIndex:-1 animated:YES];
   for (SKPaymentTransaction *t in transactions){
     if (t.transactionState == SKPaymentTransactionStatePurchased ||
         t.transactionState == SKPaymentTransactionStateRestored){
-      [alertView dismissWithClickedButtonIndex:-1 animated:YES];
       [[SKPaymentQueue defaultQueue] finishTransaction:t];
-      NCIAPHelperCompletionHandler compHandler = [self completionHandler];
-      if (compHandler){
-        compHandler(t);
-        [self setCompletionHandler:nil];
+      if (t.transactionState == SKPaymentTransactionStatePurchased){
+        NCIAPHelperCompletionHandler compHandler = [self completionHandler];
+        if (compHandler){
+          compHandler(@[t]);
+          [self setCompletionHandler:nil];
+        }
       }
     } else if (t.transactionState == SKPaymentTransactionStateFailed){
-      [alertView dismissWithClickedButtonIndex:-1 animated:YES];
       [[SKPaymentQueue defaultQueue] finishTransaction:t];
       if (t.error.code != SKErrorPaymentCancelled){
         NCIAPHelperErrorHandler errHandler = [self errorHandler];
         if (errHandler){
-          errHandler(t, t.error);
+          errHandler(@[t], t.error);
           [self setErrorHandler:nil];
         }
       }
     } else if (t.transactionState == SKPaymentTransactionStatePurchasing){
-      [alertView dismissWithClickedButtonIndex:-1 animated:YES];
       alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Preparing for Payment…", nil) message:INDICATOR_MSG delegate:self cancelButtonTitle:nil otherButtonTitles:nil];
       alertView.tag = TAG_PREPARING_FOR_PAYMENT;
       [alertView show];
@@ -127,7 +127,7 @@ static UIAlertView *alertView;
   [alertView dismissWithClickedButtonIndex:-1 animated:YES];
   NCIAPHelperCompletionHandler compHandler = [self completionHandler];
   if (compHandler)
-    compHandler([queue.transactions count] ? queue.transactions[0] : nil);
+    compHandler(queue.transactions);
   
   [self setCompletionHandler:nil];
   [self setErrorHandler:nil];
