@@ -95,15 +95,12 @@ static UIAlertView *alertView;
 {
   [alertView dismissWithClickedButtonIndex:-1 animated:YES];
   for (SKPaymentTransaction *t in transactions){
-    if (t.transactionState == SKPaymentTransactionStatePurchased ||
-        t.transactionState == SKPaymentTransactionStateRestored){
+    if (t.transactionState == SKPaymentTransactionStatePurchased){
       [[SKPaymentQueue defaultQueue] finishTransaction:t];
-      if (t.transactionState == SKPaymentTransactionStatePurchased){
-        NCIAPHelperCompletionHandler compHandler = [self completionHandler];
-        if (compHandler){
-          compHandler(@[t]);
-          [self setCompletionHandler:nil];
-        }
+      NCIAPHelperCompletionHandler compHandler = [self completionHandler];
+      if (compHandler){
+        compHandler(@[t]);
+        [self setCompletionHandler:nil];
       }
     } else if (t.transactionState == SKPaymentTransactionStateFailed){
       [[SKPaymentQueue defaultQueue] finishTransaction:t];
@@ -118,6 +115,8 @@ static UIAlertView *alertView;
       alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Preparing for Payment…", nil) message:INDICATOR_MSG delegate:self cancelButtonTitle:nil otherButtonTitles:nil];
       alertView.tag = TAG_PREPARING_FOR_PAYMENT;
       [alertView show];
+    } else if (t.transactionState == SKPaymentTransactionStateRestored){
+      // Do nothing, let it be handled with `+paymentQueueRestoreCompletedTransactionsFinished:`
     }
   }
 }
@@ -126,8 +125,12 @@ static UIAlertView *alertView;
 {
   [alertView dismissWithClickedButtonIndex:-1 animated:YES];
   NCIAPHelperCompletionHandler compHandler = [self completionHandler];
+  // You should check the transactions if they are matching your desired product ids
   if (compHandler)
     compHandler(queue.transactions);
+  
+  for (SKPaymentTransaction *pt in queue.transactions)
+    [[SKPaymentQueue defaultQueue] finishTransaction:pt];
   
   [self setCompletionHandler:nil];
   [self setErrorHandler:nil];
